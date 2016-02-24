@@ -13,23 +13,29 @@ using namespace std;
 
 typedef unsigned char uchar;
 
-/* Calculate spatial correlation, mutual information, and characteristic correlation length lambda */
+#define E (2.7182818284590452353602874713526624977572470937L )
 
 //Class for Activator/Inhibitor Cellular Automaton Experiment Information
 class AICA{
 	public:
 		double j1, j2, h, r1, r2;		//command line parameters for calculations
 		int id;							//experiment ID number
+		double N2;						//number of cells in the 30x30 grid (900)
 		string ouputname;				//output file
 		vector <vector <int> > board;	//the grid of values (1 or -1)
 		vector <double> sc;				//holds the calculated spatial correlation at each possible radius (0-14) by index
 		vector <double> mi;				//holds the calculated mutual information at each possible radius (0-14) by index
-		vector <double> lambda;			//holds the calculated correlation length (lambda) at each possible radius (0-14) by index
+		double H;						//holds the calculated entropy value of the entire system
+		vector <double> Hj;				//holds the calculated joint entropy values at each possible radius (0-14) by index
+		double lambda;					//the calculated correlation length
 
 		void make_grid();				//randomly populate the grid with 1 or -1
 		void update_grid();				//update the randomized grid until the aica until it has stabilized
 		int cell_distance(int i1, int j1, int i2, int j2);
-		int calc_sc();
+		void calc_sc();
+		void calc_lambda();
+		void calc_entropy();
+		void calc_joint_entropy();
 		void make_pgm_webpage(string filename);
 };
 
@@ -40,6 +46,7 @@ int main(int argc, char *argv[]){
 	AICA aica;			//instance of Activator/Inhibitor Cellular Automaton experiment class
 
 	srand(unsigned (time(0)));
+	//srand(1);
 	
 	//check that the number of arguments is correct and assign parameters
 	if(argc == 8){
@@ -56,19 +63,27 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 	
-	//resize vectors holding spatial correlation, mutual information, and correlation length (lambda)
+	//resize vectors holding spatial correlation, mutual information, and joint entropy
 	aica.sc.resize(15);
 	aica.mi.resize(15);
-	aica.lambda.resize(15);
+	aica.Hj.resize(15);
 
+	//N2 is number of cells in grid (30^2)
+	aica.N2 = pow(30, 2);
+	
 	//make_pgm_webpage(outputname);
 
 
 	//populat the board with either 1 or -1
 	aica.make_grid();
+	
+	//update the AICA grid until the system stabilizes
 	aica.update_grid();
 
+	//perform relevant calculations on system
 	aica.calc_sc();
+	aica.calc_lambda();
+	aica.calc_entropy();
 
 	return 0;
 
@@ -97,7 +112,6 @@ void AICA::update_grid(){
 	vector <vector <bool> > cells_updated;		//true at (i, j) if the cell at (i, j) has been updated already
 	vector <int> indices;						//all possible grid indices if grid were a 1D array
 	vector <pair <int, int> > coords;			//all possible indices as coordinate pairs
-	int cells_left = 30*30;						//number of cells that are left to be updated
 	int x, y;
 	int d;
 	int new_state;
@@ -129,7 +143,7 @@ void AICA::update_grid(){
 		//reshuffle coords vector to pick a difference sequence of cell positions to update
 		random_shuffle(coords.begin(), coords.end(), rand_num_gen);
 
-		/*
+		/*	
 		cout << endl;
 		cout << "STARTING UPDATE PROCESS" << endl << endl;
 		for(int i = 0; i < board.size(); i++){
@@ -140,11 +154,11 @@ void AICA::update_grid(){
 			cout << endl;
 		}
 		*/
+		
 
 
 		//asychronously update each cell by traversing randomized coords vector 
 		for(int z = 0; z < coords.size(); z++){
-		//while(cells_left > 0){
 			//reinitialize variables for a new cell to be updated
 			near_sum = 0;
 			far_sum = 0;
@@ -189,8 +203,6 @@ void AICA::update_grid(){
 			}
 			//in the rare case that the transition function result equals zero, cell keeps same state
 
-
-
 		}	//end of coords loop
 		
 	}
@@ -219,9 +231,9 @@ int AICA::cell_distance(int x1, int y1, int x2, int y2){
 
 
 //function for calculation the spacial correlation of an AICA system
-int AICA::calc_sc(){
+void AICA::calc_sc(){
 	int cell_dist = 0;
-	double N = 30, cl;			
+	double cl;			
 	double pl;					//spatial correlation at a given distance (l)
 	double product_sum = 0.0;
 	double cell_sum = 0.0;
@@ -229,25 +241,25 @@ int AICA::calc_sc(){
 	//iterate through all possible distances between cells (0-14)
 	for(int l = 0; l < 15; l++){
 		cell_sum = 0;
+		product_sum = 0;
 		pl = 0;
 		cl = 4 * l;
-		
+
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
-				//printf("(%d,%d)\n", x1, y1);
-
+				//keep track of the sum of states for all cells in the grid
 				cell_sum += board[x1][y1];
 				
-				//for each of these cells, iterate through all other distinct pairs of cells
+				//for each of these cells, iterate through all other cells
 				for(int x2 = 0; x2 < 30; x2++){
 					for(int y2 = 0; y2 < 30; y2++){
+						//condition to avoid double-counting cells
 						if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
-							//printf("  (%d,%d)\n", x2, y2);
 							cell_dist = cell_distance(x1, y1, x2, y2);
 
-							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);
-						
+							//if current cell is within distance being considered, multiply states and add to sum
+							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);	
 						}
 					}
 				}	//end of inner row loop
@@ -256,19 +268,131 @@ int AICA::calc_sc(){
 		
 		//calculate the spatial correlation (pl) at the current distance
 		if(l == 0){
-			pl = 1 - pow(((1/pow(N, 2)) * cell_sum), 2);
+			pl = abs(1 - pow(((1/N2) * cell_sum), 2));
 		}else{
-			pl = ((2/(pow(N, 2) * cl)) * product_sum) - pow(((1/pow(N, 2)) * cell_sum), 2);
+			pl = abs(((2/(N2 * cl)) * product_sum) - pow(((1/N2) * cell_sum), 2));
 		}
-	
+
+
+
+		/*		
+		//loop through every cell in the grid
+		for(int x1 = 0; x1 < 30; x1++){
+			for(int y1 = 0; y1 < 30; y1++){
+				//printf("(%d,%d)\n", x1, y1);
+				//keep track of the sum of states for all cells in the grid
+				cell_sum += board[x1][y1];
+				
+				//for each of these cells, iterate through all other cells
+				for(int x2 = 0; x2 < 30; x2++){
+					for(int y2 = 0; y2 < 30; y2++){
+						//if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
+							//printf("  (%d,%d)\n", x2, y2);
+							cell_dist = cell_distance(x1, y1, x2, y2);
+
+							//if current cell is within distance being considered, multiply states and add to sum
+							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);
+						
+						//}
+					}
+				}	//end of inner row loop
+			}
+		}	//end of outer row loop
+		
+		//calculate the spatial correlation (pl) at the current distance
+		if(l == 0){
+			pl = abs(1 - pow(((1/pow(N, 2)) * cell_sum), 2));
+		}else{
+			pl = abs(((1/(pow(N, 2) * cl)) * product_sum) - pow(((1/pow(N, 2)) * cell_sum), 2));
+		}
+		*/
+
+
 		//add pl to sc vector at index l
 		sc[l] = pl;
 	}	//end of distance loop (l)
-
-	for(int a = 0; a < sc.size(); a++) cout << a << ": " << sc[a] << endl;
-	return 0;
 }
 
+
+//function for calculation the characteristic correlation length of an AICA system
+void AICA::calc_lambda(){
+	double pl = sc[0]/E;
+	double val = 0.0;
+	double closest_val = 100.0;
+	int closest_index = 0;
+
+	//lambda is the index of the calculated spacial correlation value closest to sc[0]/e
+	for(int i = 0; i < sc.size(); i++){
+		val = abs(pl - sc[i]);
+		if(val < closest_val){
+			closest_val = val;
+			closest_index = i;
+		}
+	}
+	lambda = closest_index;
+}
+
+
+//function for calculating the entropy of an AICA system
+void AICA::calc_entropy(){
+	int bsum = 0;			//sum of converted binary states of all cells in grid
+	double pospr = 0.0;		//probability of state value 1
+	double negpr = 0.0;		//probability of state value -1
+	double pos_term = 0.0;	//the state value 1 portion of the entropy equation
+	double neg_term = 0.0;	//the state value -1 portion of the entropy equation
+
+	//run through every cell and convert value from bipolar (-1,1) to binary (0,1)
+	for(int x = 0; x < 30; x++){
+		for(int y = 0; y < 30; y++){
+			bsum += (1 + board[x][y]) / 2;
+		}
+	}
+
+	//calculate probability of state value 1
+	pospr = (1/N2) * bsum;
+	//calculate probability of state value -1
+	negpr = 1 - pospr;
+
+	//using these probabilities, calculate the overall entropy
+	if(pospr != 0) pos_term = pospr * log2(pospr);		
+	else pos_term = 0;
+	
+	if(negpr != 0) neg_term = negpr * log2(negpr);		
+	else neg_term = 0;
+	
+	H = -(pos_term + neg_term);
+}
+
+
+//function for calculating the joint entropy of an AICA system
+void AICA::calc_joint_entropy(){
+
+	//iterate through all possible distances between cells (0-14)
+	for(int l = 0; l < 15; l++){
+		cl = 4 * l;
+
+		//loop through every cell in the grid
+		for(int x1 = 0; x1 < 30; x1++){
+			for(int y1 = 0; y1 < 30; y1++){
+				//keep track of the sum of states for all cells in the grid
+				cell_sum += board[x1][y1];
+
+				//for each of these cells, iterate through all other cells
+				for(int x2 = 0; x2 < 30; x2++){
+					for(int y2 = 0; y2 < 30; y2++){
+						//condition to avoid double-counting cells
+						if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
+							cell_dist = cell_distance(x1, y1, x2, y2);
+
+							//if current cell is within distance being considered, multiply states and add to sum
+							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);	
+						}
+					}
+				}	//end of inner row loop
+			}
+		}	//end of outer row loop
+	}
+}
 
 //for creating a .pgm image of a given CA system
 void AICA::make_pgm_webpage(string filename){
