@@ -8,6 +8,7 @@
 #include <time.h>
 #include <utility>
 #include <cmath>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -37,6 +38,7 @@ class AICA{
 		void calc_entropy();			//calculate the overall entropy of the system
 		void calc_joint_entropy();		//calculate the joint entropy at every possible distance
 		void calc_mutual_info();		//calculate the mutual information at every possible distance
+		void record_data();
 		void make_pgm_webpage(string filename);
 };
 
@@ -72,9 +74,6 @@ int main(int argc, char *argv[]){
 	//N2 is number of cells in grid (30^2)
 	aica.N2 = pow(30, 2);
 	
-	//make_pgm_webpage(outputname);
-
-
 	//populat the board with either 1 or -1
 	aica.make_grid();
 	
@@ -84,12 +83,14 @@ int main(int argc, char *argv[]){
 	//perform relevant calculations on system
 	aica.calc_sc();
 	aica.calc_lambda();
-	aica.calc_entropy();
-	aica.calc_joint_entropy();
 	aica.calc_mutual_info();
-	return 0;
 
+	//save the data generated
+	aica.record_data();
+
+	return 0;
 }
+
 
 //for randomly populating a 30x30 grid with either -1 or 1
 void AICA::make_grid(){
@@ -145,6 +146,7 @@ void AICA::update_grid(){
 		//reshuffle coords vector to pick a difference sequence of cell positions to update
 		random_shuffle(coords.begin(), coords.end(), rand_num_gen);
 
+		/*
 		cout << endl;
 		cout << "STARTING UPDATE PROCESS" << endl << endl;
 		for(int i = 0; i < board.size(); i++){
@@ -154,6 +156,7 @@ void AICA::update_grid(){
 			}
 			cout << endl;
 		}
+		*/
 		
 
 
@@ -304,18 +307,10 @@ void AICA::calc_sc(){
 		}else{
 			pl = abs(((1/(N2 * cl)) * product_sum) - pow(((1/N2) * cell_sum), 2));
 		}
-		
-
 
 		//add pl to sc vector at index l
 		sc[l] = pl;
 	}	//end of distance loop (l)
-
-	cout << "Spatial Correlation: " << endl;
-	for(int i = 0; i < sc.size(); i++){
-		cout << sc[i] << " " << endl;
-	}
-
 }
 
 
@@ -335,7 +330,6 @@ void AICA::calc_lambda(){
 		}
 	}
 	lambda = closest_index;
-	cout << "lambda: " << lambda << endl;
 }
 
 
@@ -366,8 +360,7 @@ void AICA::calc_entropy(){
 	if(negpr != 0) neg_term = negpr * log2(negpr);		
 	else neg_term = 0;
 	
-	H = -(pos_term + neg_term);
-	cout << "Entropy(H): " << H << endl;
+	H = (-1.0) * (pos_term + neg_term);
 }
 
 
@@ -431,20 +424,14 @@ void AICA::calc_joint_entropy(){
 			}
 		}	//end of outer row loop
 		
-		//cout << "jpos_sum: " << jpos_sum << endl;
-		//cout << "jneg_sum: " << jneg_sum << endl;
-
 		//calculate probability of two arbitrary cells both being positive
 		pos_prob = (1/(N2 * cl)) * jpos_sum;
-		//cout << "pos_prob: " << pos_prob << endl;
 
 		//calculate probability of two arbitrary cells both being negative
 		neg_prob = (1/(N2 * cl)) * jneg_sum;
-		//cout << "neg_prob: " << neg_prob << endl;
 
 		//calculate probability of two arbitrary cells having different state values
 		neut_prob = 1 - pos_prob - neg_prob;
-		//cout << "neut_prob: " << neut_prob << endl;
 		if(neut_prob < 0){
 			fprintf(stderr, "Invalid (negative) neutral probability in joint entropy function\n");
 			exit(1);
@@ -458,29 +445,55 @@ void AICA::calc_joint_entropy(){
 		if(neut_prob != 0) neut_term = neut_prob * log2(neut_prob);
 		else neut_term = 0;
 		
-		Hl = -(pos_term + neg_term + neut_term);
+		Hl = (-1.0) * (pos_term + neg_term + neut_term);
 		
 		//add result to joint entropy vector at position l
 		Hj[l] = Hl;
-	}
-
-	cout << "Joint entropy vals:" << endl;
-	for(int i = 0; i < Hj.size(); i++){
-		cout << Hj[i] << endl;
 	}
 }
 
 
 //for calculating the mutual information at every possible distance
 void AICA::calc_mutual_info(){
+
+	//first, calculate the entropy of the system
+	calc_entropy();
+
+	//second, calculate the joint entropy of cell pairs at every possible distance (0-14)
+	calc_joint_entropy();
+
 	for(int i = 0; i < mi.size(); i++){
 		mi[i] = (2 * H) - Hj[i];
 	}
+}
 
-	cout << "Mutual Information vals: " << endl;
-	for(int x = 0; x < mi.size(); x++){
-		cout << mi[x] << endl;
+
+//after all the calculations have been finished, write the data to a .csv file
+void AICA::record_data(){
+	string experiment = "Experiment_" + to_string(id);
+	ofstream data;
+	char outputline[1024];
+
+	//if this is the first time the program has been run, make a new directory for files
+	mkdir("./Experiment_Data", 0777);
+
+	data.open("./Experiment_Data/" +  experiment + ".csv");
+	if(!data.is_open()){
+		fprintf(stderr, "Could not open current data vile (.csv)\n");
+		exit(1);
 	}
+
+	//header info
+	data << "Experiment# " << id << "\n";
+	data << "Distance, Correlation, Entropy, Joint Entropy, Mutual Information, J1, J2, H, R1, R2\n";
+	for(int i = 0; i < 15; i++){
+		sprintf(outputline, "%d, %f, %f, %f, %f, %f, %f, %lf, %lf, %lf\n", i, sc[i], H, Hj[i], mi[i], j1, j2, h, r1, r2);
+		data << outputline;
+	}
+
+	data.close();
+
+	
 }
 
 
