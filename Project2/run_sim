@@ -1,0 +1,28 @@
+#!/bin/bash
+# This script runs the AICA simulation with varied parameters
+
+#Experiment 1 (j1 = 1 and j2 = -0.1)
+j1 = 1
+j2 = -0.1
+idnum = 1
+for r1 in 1 2 3 5 7 9 10 12
+{
+	for ((r2 = $r1 + 1; r2 < 14; r2 += 2))
+	{
+		for h in 0 -6 -4 -2 0 2 3 6
+		{
+			./aica "$j1" "$j2" "$h" "$r1" "$r2" "$idnum" 
+			((idnum++))
+		}
+		echo;
+	}
+	echo;
+}
+
+echo;
+
+
+
+
+
+

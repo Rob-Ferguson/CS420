@@ -21,7 +21,7 @@ class AICA{
 		double j1, j2, h, r1, r2;		//command line parameters for calculations
 		int id;							//experiment ID number
 		double N2;						//number of cells in the 30x30 grid (900)
-		string ouputname;				//output file
+		//string ouputname;				//output file
 		vector <vector <int> > board;	//the grid of values (1 or -1)
 		vector <double> sc;				//holds the calculated spatial correlation at each possible radius (0-14) by index
 		vector <double> mi;				//holds the calculated mutual information at each possible radius (0-14) by index
@@ -50,17 +50,17 @@ int main(int argc, char *argv[]){
 	//srand(1);
 	
 	//check that the number of arguments is correct and assign parameters
-	if(argc == 8){
+	if(argc == 7){
 		aica.j1 = strtod(argv[1], NULL);
 		aica.j2 = strtod(argv[2], NULL);
 		aica.h  = strtod(argv[3], NULL);
 		aica.r1 = strtod(argv[4], NULL);
 		aica.r2 = strtod(argv[5], NULL);
 		aica.id = strtod(argv[6], NULL);
-		aica.ouputname = argv[7];
+		//aica.ouputname = argv[7];
 	} else{
-		fprintf(stderr, "Please enter doubles j1, j2, h, r1, r2 for calculations, an experiment ID number, and an output file name.\n");
-		fprintf(stderr, "USAGE: ./aica j1 j2 h r1 r2 id outputimagename\n");
+		fprintf(stderr, "Please enter doubles j1, j2, h, r1, r2 for calculations, and an experiment ID number.\n");
+		fprintf(stderr, "USAGE: ./aica j1 j2 h r1 r2 id\n");
 		exit(1);
 	}
 	
