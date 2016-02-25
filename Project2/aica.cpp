@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
 	aica.calc_sc();
 	aica.calc_lambda();
 	aica.calc_entropy();
-
+	//aica.calc_joint_entropy();
 	return 0;
 
 }
@@ -245,6 +245,7 @@ void AICA::calc_sc(){
 		pl = 0;
 		cl = 4 * l;
 
+		
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
@@ -252,15 +253,15 @@ void AICA::calc_sc(){
 				cell_sum += board[x1][y1];
 				
 				//for each of these cells, iterate through all other cells
-				for(int x2 = 0; x2 < 30; x2++){
-					for(int y2 = 0; y2 < 30; y2++){
+				for(int x2 = x1; x2 < 30; x2++){
+					for(int y2 = y1 + 1; y2 < 30; y2++){
 						//condition to avoid double-counting cells
-						if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
+						//if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
 							cell_dist = cell_distance(x1, y1, x2, y2);
 
 							//if current cell is within distance being considered, multiply states and add to sum
 							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);	
-						}
+						//}
 					}
 				}	//end of inner row loop
 			}
@@ -268,18 +269,17 @@ void AICA::calc_sc(){
 		
 		//calculate the spatial correlation (pl) at the current distance
 		if(l == 0){
-			pl = abs(1 - pow(((1/N2) * cell_sum), 2));
+			pl = abs(1 - pow(((1.0/N2) * cell_sum), 2));
 		}else{
-			pl = abs(((2/(N2 * cl)) * product_sum) - pow(((1/N2) * cell_sum), 2));
+			pl = abs(((2.0/(N2 * cl)) * product_sum) - pow(((1.0/N2) * cell_sum), 2));
 		}
+		
 
 
-
-		/*		
+		/*			
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
-				//printf("(%d,%d)\n", x1, y1);
 				//keep track of the sum of states for all cells in the grid
 				cell_sum += board[x1][y1];
 				
@@ -287,7 +287,6 @@ void AICA::calc_sc(){
 				for(int x2 = 0; x2 < 30; x2++){
 					for(int y2 = 0; y2 < 30; y2++){
 						//if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
-							//printf("  (%d,%d)\n", x2, y2);
 							cell_dist = cell_distance(x1, y1, x2, y2);
 
 							//if current cell is within distance being considered, multiply states and add to sum
@@ -301,22 +300,28 @@ void AICA::calc_sc(){
 		
 		//calculate the spatial correlation (pl) at the current distance
 		if(l == 0){
-			pl = abs(1 - pow(((1/pow(N, 2)) * cell_sum), 2));
+			pl = abs(1 - pow(((1/N2) * cell_sum), 2));
 		}else{
-			pl = abs(((1/(pow(N, 2) * cl)) * product_sum) - pow(((1/pow(N, 2)) * cell_sum), 2));
+			pl = abs(((1/(N2 * cl)) * product_sum) - pow(((1/N2) * cell_sum), 2));
 		}
 		*/
+		
 
 
 		//add pl to sc vector at index l
 		sc[l] = pl;
 	}	//end of distance loop (l)
+
+	for(int i = 0; i < sc.size(); i++){
+		cout << sc[i] << " " << endl;
+	}
+
 }
 
 
 //function for calculation the characteristic correlation length of an AICA system
 void AICA::calc_lambda(){
-	double pl = sc[0]/E;
+	double pl = sc[1]/E;
 	double val = 0.0;
 	double closest_val = 100.0;
 	int closest_index = 0;
@@ -366,31 +371,102 @@ void AICA::calc_entropy(){
 
 //function for calculating the joint entropy of an AICA system
 void AICA::calc_joint_entropy(){
+	int pbin_state1, pbin_state2;	//holds the positive state of two cells converted from bipolar to binary format
+	int nbin_state1, nbin_state2;	//holds the negative state of two cells converted from bipolar to binary format
+	double cl;
+	double cell_dist;
+	double jpos_sum;				//cumulative sum of the joint probability of two cells being in state 1
+	double jneg_sum;				//cumulative sum of the joint probability of two cells being in state -1
+	double pos_prob;				//overall probability of two cells both being positive (1) state
+	double neg_prob;				//overall probability of two cells both being negative (-1) state
+	double neut_prob;				//overall probability of two cells having different states (neutral)
+	double pos_term;				//the state value 1 portion of the joint entropy equation
+	double neg_term;				//the state value -1 portion of the joint entropy equation
+	double neut_term;				//the mixed state value portion of the joint entropy equation
+	double Hl = 0.0;				//joint entropy of system at distance l (0-14)
 
-	//iterate through all possible distances between cells (0-14)
-	for(int l = 0; l < 15; l++){
+	//can't consider distance of 0, so joint entropy with l = 0 is just zero
+	Hj[0] = 0;
+
+	//iterate through all possible distances between cells (1-14)
+	for(int l = 1; l < 15; l++){
 		cl = 4 * l;
+		jpos_sum = 0;
+		jneg_sum = 0;
 
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
-				//keep track of the sum of states for all cells in the grid
-				cell_sum += board[x1][y1];
+				//convert first cell state value to binary equivalent
+				pbin_state1 = (1 + board[x1][y1]) / 2; 
+				nbin_state1 = (1 - board[x1][y1]) / 2; 
+				
+				cout << "pbin1: " << pbin_state1 << ", nbin1: " << nbin_state1 << endl;
 
 				//for each of these cells, iterate through all other cells
-				for(int x2 = 0; x2 < 30; x2++){
-					for(int y2 = 0; y2 < 30; y2++){
+				for(int x2 = x1; x2 < 30; x2++){
+					for(int y2 = y1 + 1; y2 < 30; y2++){
+						//convert second cell state value to binary equivalent
+						pbin_state2 = (1 + board[x2][y2]) / 2; 
+						nbin_state2 = (1 - board[x2][y2]) / 2; 
+
 						//condition to avoid double-counting cells
-						if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
+						//if((x1 != x2) || ((x1 == x2) && (y2 > y1))){
 							cell_dist = cell_distance(x1, y1, x2, y2);
 
-							//if current cell is within distance being considered, multiply states and add to sum
-							if(cell_dist == l) product_sum += (board[x1][y1] * board[x2][y2]);	
-						}
+							//if current cell is within distance being considered, calculate state sums
+							if(cell_dist == l){
+								
+								//calculate the product of states and add to positive sum
+								jpos_sum += (pbin_state1) * (pbin_state2); 
+
+								//calculate the product of states and add to negative sum
+								jneg_sum += (nbin_state1) * (nbin_state2);
+							}
+						//}
 					}
 				}	//end of inner row loop
 			}
 		}	//end of outer row loop
+		
+		cout << "jpos_sum: " << jpos_sum << endl;
+		cout << "jneg_sum: " << jneg_sum << endl;
+
+		//calculate probability of two arbitrary cells both being positive
+		pos_prob = (2/(N2 * cl)) * jpos_sum;
+		cout << "pos_prob: " << pos_prob << endl;
+
+		//calculate probability of two arbitrary cells both being negative
+		neg_prob = (2/(N2 * cl)) * jneg_sum;
+		cout << "neg_prob: " << neg_prob << endl;
+
+		//calculate probability of two arbitrary cells having different state values
+		neut_prob = 1 - pos_prob - neg_prob;
+		cout << "neut_prob: " << neut_prob << endl;
+		if(neut_prob < 0){
+			fprintf(stderr, "Invalid (negative) neutral probability in joint entropy function\n");
+			exit(1);
+		}
+		
+		//use these probabilities to calculate the joint entropy of the system at distance l
+		if(pos_prob != 0) pos_term = pos_prob * log2(pos_prob);
+		else pos_term = 0;
+		if(neg_prob != 0) neg_term = neg_prob * log2(neg_prob);
+		else neg_term = 0;
+		if(neut_prob != 0) neut_term = neut_prob * log2(neut_prob);
+		else neut_term = 0;
+		
+		Hl = -(pos_term + neg_term + neut_term);
+		
+		//add result to joint entropy vector at position l
+		Hj[l] = Hl;
+
+		cout << endl;
+	}
+
+	cout << "Joint entropy vals:" << endl;
+	for(int i = 0; i < Hj.size(); i++){
+		cout << Hj[i] << endl;
 	}
 }
 
