@@ -32,10 +32,11 @@ class AICA{
 		void make_grid();				//randomly populate the grid with 1 or -1
 		void update_grid();				//update the randomized grid until the aica until it has stabilized
 		int cell_distance(int i1, int j1, int i2, int j2);
-		void calc_sc();
-		void calc_lambda();
-		void calc_entropy();
-		void calc_joint_entropy();
+		void calc_sc();					//calculate spatial correlation at every possible distance
+		void calc_lambda();				//calculate the characteristic correlation length (lambda)
+		void calc_entropy();			//calculate the overall entropy of the system
+		void calc_joint_entropy();		//calculate the joint entropy at every possible distance
+		void calc_mutual_info();		//calculate the mutual information at every possible distance
 		void make_pgm_webpage(string filename);
 };
 
@@ -84,7 +85,8 @@ int main(int argc, char *argv[]){
 	aica.calc_sc();
 	aica.calc_lambda();
 	aica.calc_entropy();
-	//aica.calc_joint_entropy();
+	aica.calc_joint_entropy();
+	aica.calc_mutual_info();
 	return 0;
 
 }
@@ -143,7 +145,6 @@ void AICA::update_grid(){
 		//reshuffle coords vector to pick a difference sequence of cell positions to update
 		random_shuffle(coords.begin(), coords.end(), rand_num_gen);
 
-		/*	
 		cout << endl;
 		cout << "STARTING UPDATE PROCESS" << endl << endl;
 		for(int i = 0; i < board.size(); i++){
@@ -153,7 +154,6 @@ void AICA::update_grid(){
 			}
 			cout << endl;
 		}
-		*/
 		
 
 
@@ -245,7 +245,7 @@ void AICA::calc_sc(){
 		pl = 0;
 		cl = 4 * l;
 
-		
+		/*	
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
@@ -273,10 +273,10 @@ void AICA::calc_sc(){
 		}else{
 			pl = abs(((2.0/(N2 * cl)) * product_sum) - pow(((1.0/N2) * cell_sum), 2));
 		}
-		
+		*/	
 
 
-		/*			
+					
 		//loop through every cell in the grid
 		for(int x1 = 0; x1 < 30; x1++){
 			for(int y1 = 0; y1 < 30; y1++){
@@ -304,7 +304,6 @@ void AICA::calc_sc(){
 		}else{
 			pl = abs(((1/(N2 * cl)) * product_sum) - pow(((1/N2) * cell_sum), 2));
 		}
-		*/
 		
 
 
@@ -312,6 +311,7 @@ void AICA::calc_sc(){
 		sc[l] = pl;
 	}	//end of distance loop (l)
 
+	cout << "Spatial Correlation: " << endl;
 	for(int i = 0; i < sc.size(); i++){
 		cout << sc[i] << " " << endl;
 	}
@@ -335,6 +335,7 @@ void AICA::calc_lambda(){
 		}
 	}
 	lambda = closest_index;
+	cout << "lambda: " << lambda << endl;
 }
 
 
@@ -366,6 +367,7 @@ void AICA::calc_entropy(){
 	else neg_term = 0;
 	
 	H = -(pos_term + neg_term);
+	cout << "Entropy(H): " << H << endl;
 }
 
 
@@ -401,11 +403,11 @@ void AICA::calc_joint_entropy(){
 				pbin_state1 = (1 + board[x1][y1]) / 2; 
 				nbin_state1 = (1 - board[x1][y1]) / 2; 
 				
-				cout << "pbin1: " << pbin_state1 << ", nbin1: " << nbin_state1 << endl;
+				//cout << "pbin1: " << pbin_state1 << ", nbin1: " << nbin_state1 << endl;
 
 				//for each of these cells, iterate through all other cells
-				for(int x2 = x1; x2 < 30; x2++){
-					for(int y2 = y1 + 1; y2 < 30; y2++){
+				for(int x2 = 0; x2 < 30; x2++){
+					for(int y2 = 0; y2 < 30; y2++){
 						//convert second cell state value to binary equivalent
 						pbin_state2 = (1 + board[x2][y2]) / 2; 
 						nbin_state2 = (1 - board[x2][y2]) / 2; 
@@ -429,20 +431,20 @@ void AICA::calc_joint_entropy(){
 			}
 		}	//end of outer row loop
 		
-		cout << "jpos_sum: " << jpos_sum << endl;
-		cout << "jneg_sum: " << jneg_sum << endl;
+		//cout << "jpos_sum: " << jpos_sum << endl;
+		//cout << "jneg_sum: " << jneg_sum << endl;
 
 		//calculate probability of two arbitrary cells both being positive
-		pos_prob = (2/(N2 * cl)) * jpos_sum;
-		cout << "pos_prob: " << pos_prob << endl;
+		pos_prob = (1/(N2 * cl)) * jpos_sum;
+		//cout << "pos_prob: " << pos_prob << endl;
 
 		//calculate probability of two arbitrary cells both being negative
-		neg_prob = (2/(N2 * cl)) * jneg_sum;
-		cout << "neg_prob: " << neg_prob << endl;
+		neg_prob = (1/(N2 * cl)) * jneg_sum;
+		//cout << "neg_prob: " << neg_prob << endl;
 
 		//calculate probability of two arbitrary cells having different state values
 		neut_prob = 1 - pos_prob - neg_prob;
-		cout << "neut_prob: " << neut_prob << endl;
+		//cout << "neut_prob: " << neut_prob << endl;
 		if(neut_prob < 0){
 			fprintf(stderr, "Invalid (negative) neutral probability in joint entropy function\n");
 			exit(1);
@@ -460,8 +462,6 @@ void AICA::calc_joint_entropy(){
 		
 		//add result to joint entropy vector at position l
 		Hj[l] = Hl;
-
-		cout << endl;
 	}
 
 	cout << "Joint entropy vals:" << endl;
@@ -469,6 +469,20 @@ void AICA::calc_joint_entropy(){
 		cout << Hj[i] << endl;
 	}
 }
+
+
+//for calculating the mutual information at every possible distance
+void AICA::calc_mutual_info(){
+	for(int i = 0; i < mi.size(); i++){
+		mi[i] = (2 * H) - Hj[i];
+	}
+
+	cout << "Mutual Information vals: " << endl;
+	for(int x = 0; x < mi.size(); x++){
+		cout << mi[x] << endl;
+	}
+}
+
 
 //for creating a .pgm image of a given CA system
 void AICA::make_pgm_webpage(string filename){
