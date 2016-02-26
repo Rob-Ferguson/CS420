@@ -50,14 +50,17 @@ class AICA{
 class avg_AICA{
 	public:
 		vector <AICA *> simulations;
-	
+		int id, experiment;
+		string name;
 		vector <double> avg_sc;				//holds the calculated spatial correlation at each possible radius (0-14) by index
 		vector <double> avg_mi;				//holds the calculated mutual information at each possible radius (0-14) by index
 		double avg_H;						//holds the calculated entropy value of the entire system
 		vector <double> avg_Hj;				//holds the calculated joint entropy values at each possible radius (0-14) by index
-		double avg_lambda;					//the calculated correlation length
+		int avg_lambda;						//the calculated correlation length
 
 		avg_AICA(int runs);					//ensure all of the containers are set up before data is collected from each simulation
+		void calc_averages();				//for the simulations run with these parameters, calculate the average results
+		void record_avg_data();
 };
 
 
@@ -124,14 +127,14 @@ int main(int argc, char *argv[]){
 						}
 					}
 					
-					//write average results to file
-
+					//calculate and write average results to file
+					if(avg_sims->simulations.size() > 0) avg_sims->calc_averages();
 
 					//free up memory for simulation instances and the avg_sims instance itself
 					for(int j = 0; j < avg_sims->simulations.size(); j++) delete avg_sims->simulations[j];
 					delete avg_sims;
 
-					//increment to the next unique simulation
+					//increment to the next unique simulation set
 					sim_num++;
 
 				}
@@ -173,10 +176,77 @@ int main(int argc, char *argv[]){
 //averaged results container constructor
 avg_AICA::avg_AICA(int runs){
 	//resize vectors holding spatial correlation, mutual information, and joint entropy
-	avg_sc.resize(15);
-	avg_mi.resize(15);
-	avg_Hj.resize(15);
+	avg_sc.resize(15, 0);
+	avg_mi.resize(15, 0);
+	avg_Hj.resize(15, 0);
+	avg_H = 0;
+	avg_lambda = 0;
 }
+
+void avg_AICA::calc_averages(){
+	AICA *cur_sim;
+	int num_runs = simulations.size();
+
+	//grab identifying information about the set of runs being considered
+	experiment = simulations[0]->experiment;
+	id = simulations[0]->id; 
+	name = "AvgdSimulation_" + to_string(experiment) + "_" + to_string(id); 
+
+	//add up the individual cumulative sums for all of the measures calculated
+	for(int i = 0; i < num_runs; i++){
+		cur_sim = simulations[i];	
+		
+		avg_H += cur_sim->H;
+		avg_lambda += cur_sim->lambda;		
+		for(int x = 0; x < cur_sim->sc.size(); x++){
+			avg_sc[x] += cur_sim->sc[x];
+			avg_mi[x] += cur_sim->mi[x];
+			avg_Hj[x] += cur_sim->Hj[x];
+		}
+	}
+	
+	//divide these sums by the number of simulations in this set
+	avg_H /= num_runs;
+	avg_lambda /= num_runs;
+	for(int x = 0; x < cur_sim->sc.size(); x++){
+		avg_sc[x] /= num_runs;
+		avg_mi[x] /= num_runs;
+		avg_Hj[x] /= num_runs;
+	}
+
+	//record these results
+	record_avg_data();
+}
+
+
+//after all the calculations have been finished for a set of sims, write the averaged data to a .csv file
+void avg_AICA::record_avg_data(){
+	string datafilename = "AverageMasterData_" + to_string(experiment) + ".csv";
+	ofstream data;
+	char outputline[1024];
+	AICA *sim = simulations[0];
+
+	//append new data to the MasterData file associated with the experiment number being run
+	data.open(datafilename, ios_base::app);
+	if(!data.is_open()){
+		fprintf(stderr, "Could not open current data file (.csv)\n");
+		exit(1);
+	}
+
+	//header info
+	data << "Simulation# " << id << "\n";
+	data << "Distance, Correlation, Lambda, Entropy, Joint Entropy, Mutual Information, J1, J2, H, R1, R2\n";
+	
+	//print out the data associated with each column specified above
+	for(int i = 0; i < 15; i++){
+		sprintf(outputline, "%d, %f, %d, %f, %f, %f, %f, %f, %d, %d, %d\n", i, avg_sc[i], avg_lambda, avg_H, avg_Hj[i], avg_mi[i], sim->j1, sim->j2, sim->h, sim->r1, sim->r2);
+		data << outputline;
+	}
+	data << "\n";
+
+	data.close();
+}
+
 
 //system constructor
 AICA::AICA(double J1, double J2, int h_val, int R1, int R2, int sim_num, int exp_num, int run){
@@ -194,9 +264,9 @@ AICA::AICA(double J1, double J2, int h_val, int R1, int R2, int sim_num, int exp
 	name.push_back(x);
 
 	//resize vectors holding spatial correlation, mutual information, and joint entropy
-	sc.resize(15);
-	mi.resize(15);
-	Hj.resize(15);
+	sc.resize(15, 0);
+	mi.resize(15, 0);
+	Hj.resize(15, 0);
 
 	//N2 is number of cells in grid (30^2)
 	N2 = pow(30, 2);	
@@ -221,7 +291,7 @@ bool AICA::do_calculations(){
 		calc_mutual_info();
 
 		//save the data generated and create pictures of the system
-		record_data();
+		//record_data();
 		make_pgm();
 		
 		//the system was processed, so return true
@@ -590,9 +660,9 @@ void AICA::calc_mutual_info(){
 }
 
 
-//after all the calculations have been finished, write the data to a .csv file
+//after all the calculations have been finished, write the data for one AICA simulation to a .csv file
 void AICA::record_data(){
-	string datafilename = "MasterData_" + to_string(experiment) + ".csv";
+	string datafilename = "IndividualMasterData_" + to_string(experiment) + ".csv";
 	ofstream data;
 	char outputline[1024];
 
