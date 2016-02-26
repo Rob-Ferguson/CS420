@@ -19,10 +19,11 @@ typedef unsigned char uchar;
 //Class for Activator/Inhibitor Cellular Automaton Experiment Information
 class AICA{
 	public:
-		double j1, j2, h, r1, r2;		//command line parameters for calculations
-		int id;							//experiment ID number
+		double j1, j2;
+		int h, r1, r2;					//command line parameters for calculations
+		int id;							//simulation ID number
+		int experiment;					//Overall Experiment 1, 2, or 3 as defined in the lab writeup
 		double N2;						//number of cells in the 30x30 grid (900)
-		//string ouputname;				//output file
 		vector <vector <int> > board;	//the grid of values (1 or -1)
 		vector <double> sc;				//holds the calculated spatial correlation at each possible radius (0-14) by index
 		vector <double> mi;				//holds the calculated mutual information at each possible radius (0-14) by index
@@ -30,9 +31,11 @@ class AICA{
 		vector <double> Hj;				//holds the calculated joint entropy values at each possible radius (0-14) by index
 		double lambda;					//the calculated correlation length
 
+		AICA(double J1, double J2, int h_val, int R1, int R2, int sim_num, int exp_num);	//initialize information for a new simulation
 		void make_grid();				//randomly populate the grid with 1 or -1
-		void update_grid();				//update the randomized grid until the aica until it has stabilized
+		bool update_grid();				//update the randomized grid until the aica until it has stabilized
 		int cell_distance(int i1, int j1, int i2, int j2);
+		bool do_calculations();			//function that calls other calculation functions
 		void calc_sc();					//calculate spatial correlation at every possible distance
 		void calc_lambda();				//calculate the characteristic correlation length (lambda)
 		void calc_entropy();			//calculate the overall entropy of the system
@@ -46,51 +49,143 @@ class AICA{
 int rand_num_gen(int i) { return rand() % i;}
 
 int main(int argc, char *argv[]){ 
-	AICA aica;			//instance of Activator/Inhibitor Cellular Automaton experiment class
+	AICA *aica;			//instance of Activator/Inhibitor Cellular Automaton experiment class
 
+	int r1_vals[] = {1, 3, 5, 7, 9, 11};
+	int r2_vals[] = {2, 4, 6, 8, 10, 12};
+	int h_vals[] = {0, 3, 5, -3, -5, -2};
+	int sim_num = 1;						//current simulation number (for labeling)
+	int exp_num;
+	double j1;								//the activation modifier within system
+	double j2;								//the inhibition modifier within system
+	bool considered = true;
+
+	//initialize random seed
 	srand(unsigned (time(0)));
-	//srand(1);
-	
-	//check that the number of arguments is correct and assign parameters
-	if(argc == 7){
-		aica.j1 = strtod(argv[1], NULL);
-		aica.j2 = strtod(argv[2], NULL);
-		aica.h  = strtod(argv[3], NULL);
-		aica.r1 = strtod(argv[4], NULL);
-		aica.r2 = strtod(argv[5], NULL);
-		aica.id = strtod(argv[6], NULL);
-		//aica.ouputname = argv[7];
-	} else{
-		fprintf(stderr, "Please enter doubles j1, j2, h, r1, r2 for calculations, and an experiment ID number.\n");
-		fprintf(stderr, "USAGE: ./aica j1 j2 h r1 r2 id\n");
+
+	//if experiment number (1-3) is all that is given, run simulations with varying parameters
+	if(argc == 2){
+		//based on experiment number specified, alter j1 and j2 values to match lab writeup
+		exp_num = atoi(argv[1]);
+
+		if(exp_num == 1){
+			j1 = 1;
+			j2 = 0;
+		}
+		else if(exp_num == 2){
+			j1 = 0;
+			j2 = -0.1;
+		}
+		else if(exp_num == 3){
+			j1 = 1;
+			j2 = -0.1;
+		}
+		else{
+			fprintf(stderr, "Please enter a valid experiment number (1-3)\n");
+			exit(1);
+		}
+
+		//vary r1 (6 different vals)
+		for(int r1 = 0; r1 < 6; r1++){
+			//vary r2 (6 different vals)
+			for(int r2 = 0; r2 < 6; r2++){
+				//vary h (6 different vals)
+				for(int h = 0; h < 6; h++){
+
+					//initialize values for calculations and AICA structure
+					aica = new AICA(j1, j2, h_vals[h], r1_vals[r1], r2_vals[r2], sim_num, exp_num);
+
+					considered = aica->do_calculations();
+
+					if(considered) printf("Simulation %d has finished\n", sim_num);
+					else printf("Simulation %d was discarded\n", sim_num);
+
+					delete aica;
+
+					sim_num++;
+				}
+			}
+		}
+	}
+	//if enough parameters are given, run one simulation with those values
+	else if(argc == 7){
+		j1 = strtod(argv[1], NULL);
+		j2 = strtod(argv[2], NULL);
+		int h = atoi(argv[3]);
+		int r1 = atoi(argv[4]);
+		int r2 = atoi(argv[5]);
+		int sim_num = atoi(argv[6]);
+
+		//initialize values for calculations and AICA structure
+		aica = new AICA(j1, j2, h, r1, r2, sim_num, 0);
+
+		considered = aica->do_calculations();
+
+		if(considered) printf("Simulation %d has finished\n", sim_num);
+		else printf("Simulation %d was discarded\n", sim_num);
+
+		delete aica;
+	}
+	//if neither of the allowable formats are given, throw an error
+	else{
+		fprintf(stderr, "Please provide either 6 arguments for manual simulation or 1 for automatic\n");
+		fprintf(stderr, "USAGE: ./aica j1 j2 h r1 r2 experiment_number\n");
+		fprintf(stderr, "USAGE: ./aica experiment_number (where experiment_number is 1, 2, or 3)\n");
 		exit(1);
 	}
-	
-	//resize vectors holding spatial correlation, mutual information, and joint entropy
-	aica.sc.resize(15);
-	aica.mi.resize(15);
-	aica.Hj.resize(15);
-
-	//N2 is number of cells in grid (30^2)
-	aica.N2 = pow(30, 2);
-	
-	//populat the board with either 1 or -1
-	aica.make_grid();
-	
-	//update the AICA grid until the system stabilizes
-	aica.update_grid();
-
-	//perform relevant calculations on system
-	aica.calc_sc();
-	aica.calc_lambda();
-	aica.calc_mutual_info();
-
-	//save the data generated
-	aica.record_data();
 
 	return 0;
 }
 
+
+//system constructor
+AICA::AICA(double J1, double J2, int h_val, int R1, int R2, int sim_num, int exp_num){
+	//primary experiment parameters
+	j1 = J1;
+	j2 = J2;
+	r1 = R1;
+	r2 = R2;
+	h = h_val;
+	id = sim_num;
+	experiment = exp_num;
+
+	//resize vectors holding spatial correlation, mutual information, and joint entropy
+	sc.resize(15);
+	mi.resize(15);
+	Hj.resize(15);
+
+	//N2 is number of cells in grid (30^2)
+	N2 = pow(30, 2);	
+}
+
+
+//primary function that performs all calculations
+bool AICA::do_calculations(){
+	bool varied = true;
+
+	//populat the board with either 1 or -1
+	make_grid();
+
+	//update the AICA grid until the system stabilizes
+	varied = update_grid();
+	
+	//if the system is varied enough to be interesting, perform calculations
+	if(varied){
+		//perform relevant calculations on system
+		calc_sc();
+		calc_lambda();
+		calc_mutual_info();
+
+		//save the data generated and create pictures of the system
+		record_data();
+		make_pgm_webpage("text.pgm");
+		
+		//the system was processed, so return true
+		return true;
+	} 
+	//if more than 95% of the state converges to a single state, discard the experiment
+	return false;
+}
 
 //for randomly populating a 30x30 grid with either -1 or 1
 void AICA::make_grid(){
@@ -111,13 +206,14 @@ void AICA::make_grid(){
 
 
 //continuously update the grid until the aica has fully stabalized
-void AICA::update_grid(){
+bool AICA::update_grid(){
 	vector <vector <bool> > cells_updated;		//true at (i, j) if the cell at (i, j) has been updated already
 	vector <int> indices;						//all possible grid indices if grid were a 1D array
 	vector <pair <int, int> > coords;			//all possible indices as coordinate pairs
 	int x, y;
 	int d;
 	int new_state;
+	int psum = 0, nsum = 0;								//sum of positive and negative states after stabilization
 	double near_sum, far_sum;
 	double result;
 	bool stabilized = false;
@@ -146,7 +242,7 @@ void AICA::update_grid(){
 		//reshuffle coords vector to pick a difference sequence of cell positions to update
 		random_shuffle(coords.begin(), coords.end(), rand_num_gen);
 
-		/*
+		
 		cout << endl;
 		cout << "STARTING UPDATE PROCESS" << endl << endl;
 		for(int i = 0; i < board.size(); i++){
@@ -156,7 +252,7 @@ void AICA::update_grid(){
 			}
 			cout << endl;
 		}
-		*/
+		
 		
 
 
@@ -210,6 +306,18 @@ void AICA::update_grid(){
 		
 	}
 
+	//after the system has stabilized, ensure it does not converge to a single state (uninteresting)
+	for(int x = 0; x < 30; x++){
+		for(int y = 0; y < 30; y++){
+			if(board[x][y] == 1) psum++;
+			else if(board[x][y] == -1) nsum++;
+		}
+	}
+
+	//if more than 95% of the space converges to one state or the other, discard the experiment
+	if((psum > (0.95 * N2)) || (nsum > (0.95 * N2))) return 0;
+
+	return 1;
 }
 
 
@@ -470,74 +578,63 @@ void AICA::calc_mutual_info(){
 
 //after all the calculations have been finished, write the data to a .csv file
 void AICA::record_data(){
-	string experiment = "Experiment_" + to_string(id);
+	string datafilename = "MasterData_" + to_string(experiment) + ".csv";
 	ofstream data;
 	char outputline[1024];
 
-	//if this is the first time the program has been run, make a new directory for files
-	mkdir("./Experiment_Data", 0777);
-
-	data.open("./Experiment_Data/" +  experiment + ".csv");
+	//append new data to the MasterData file associated with the experiment number being run
+	data.open(datafilename, ios_base::app);
 	if(!data.is_open()){
 		fprintf(stderr, "Could not open current data vile (.csv)\n");
 		exit(1);
 	}
 
 	//header info
-	data << "Experiment# " << id << "\n";
+	data << "Simulation# " << id << "\n";
 	data << "Distance, Correlation, Entropy, Joint Entropy, Mutual Information, J1, J2, H, R1, R2\n";
+	
+	//print out the data associated with each column specified above
 	for(int i = 0; i < 15; i++){
-		sprintf(outputline, "%d, %f, %f, %f, %f, %f, %f, %lf, %lf, %lf\n", i, sc[i], H, Hj[i], mi[i], j1, j2, h, r1, r2);
+		sprintf(outputline, "%d, %f, %f, %f, %f, %f, %f, %d, %d, %d\n", i, sc[i], H, Hj[i], mi[i], j1, j2, h, r1, r2);
 		data << outputline;
 	}
+	data << "\n";
 
 	data.close();
-
-	
 }
 
 
 //for creating a .pgm image of a given CA system
 void AICA::make_pgm_webpage(string filename){
+	ofstream fout;
+	string image = "Simulation_" + to_string(experiment) + "_" + to_string(id) + ".pgm";
+	string dir_str = "./Simulation_Images/Experiment" + to_string(experiment);
 
-	// define image dimensions
-	unsigned short width   =  480;
-	unsigned short height  =  640;
+	//if this is the first time the program has been run, make a new directory for images
+	mkdir("./Simulation_Images", 0777);
+	mkdir(dir_str.c_str(), 0777);
 
-	// allocate memory for your data
-	unsigned char *buff = new unsigned char[width*height*sizeof(uchar)];
-
-	for (int i = 0; i < width*height; i++)
-		buff[i] = rand() % 256;
-
-
-	// output file streams
-	ofstream fout (filename.c_str());
-
-	if (!fout.is_open())
-	{
-		cout << "Can't open output file"  << filename << endl;
+	fout.open(dir_str + "/" + image);
+	
+	if (!fout.is_open()){
+		cout << "Can't open image output file: " << image << endl;
 		exit(1);
 	}
 
-	// write the header
-	fout << "P5\n" << width << " " << height << " 255\n";
+	// write the .pgm header
+	fout << "P2\n"; 
+	fout << 30 << " " << 30 << " \n255\n";
 
 	// write the data
-	fout.write((char *)buff, width*height*sizeof(uchar));
-
-	// close the stream
+	for(int x = 0; x < 30; x++){
+		for(int y = 0; y < 30; y++){
+			if(board[x][y] == 1) fout << 0;
+			else if(board[x][y] == -1) fout << 255;
+			if(y < 29) fout << " ";
+		}
+		fout << "\n";
+	}
+	
 	fout.close();
-
-	// free memory
-	delete[] buff;
 }
-
-
-
-
-
-
-
-
 
