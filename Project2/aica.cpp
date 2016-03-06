@@ -12,8 +12,6 @@
 
 using namespace std;
 
-typedef unsigned char uchar;
-
 #define E (2.7182818284590452353602874713526624977572470937L )
 
 //Class for Activator/Inhibitor Cellular Automaton Experiment Information
