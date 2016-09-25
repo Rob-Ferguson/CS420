@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- saved from url=(0079)https://web.eecs.utk.edu/~mclennan/Classes/420/projects/project3/Project-3.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    
+    <title>Project 3</title>
+    <link rel="stylesheet" type="text/css" href="./Project3_Description_files/classes-style.css">
+    <meta name="author" content="Bruce MacLennan">
+    <meta name="description" content="Project 3 description, testing the
+      associative memory capacity of a Hopfield network">
+    <meta content="templates" name="keywords">
+  </head>
+  <body>
+    <center>
+      <h1> CS 420/427/527 Project 3 — Hopfield Net</h1>
+    </center>
+    <center>
+      <h1> Due March 11, 2016<br>
+      </h1>
+    </center>
+    <br>
+    <h2>General Description<br>
+    </h2>
+    <ul>
+      <li><big>In this project you will be investigating the associative
+          memory capacity of a Hopfield network.&nbsp; You will use <i>N</i>
+          = 100 neurons with no self-coupling.</big><br>
+      </li>
+      <li><big>For additional information, see Bar-Yam Section 2.2.6
+          (pp. 312–19, <a href="http://www.necsi.org/publications/dcs/Bar-YamChap2.pdf">available
+
+
+
+
+
+
+
+            online</a>).</big></li>
+      <li><big>See Dr. Van Hornweder’s web page &lt;<a target="_blank" href="http://web.eecs.utk.edu/~mclennan/Classes/420/projects/project3/hopfieldnet.html">web.eecs.utk.edu/~mclennan/Classes/420/projects/project3/hopfieldnet.html</a>&gt;
+
+
+
+
+
+
+
+          for additional information, hints, tips, etc.</big></li>
+      <li><big>You are expected to implement the software to do these
+          experiments; turn it in with your report.<br>
+        </big></li>
+    </ul>
+    <h2>For COSC 420 Credit</h2>
+    <ul>
+      <li><big>Perform a series of experiments as follows:</big></li>
+    </ul>
+    <blockquote>
+      <ol>
+        <li><big>Generate 50 random bipolar vectors (<i>N</i> = 100).</big></li>
+        <li><big>For <i>p</i> = 1, ..., 50, imprint the first <i>p</i>
+            patterns on a Hopfield net.</big><big>&nbsp; (The rule for
+            imprinting <i>p</i> patterns is given on slide 63 in <a href="https://web.eecs.utk.edu/~mclennan/Classes/420/handouts/Part-3A-6pp.pdf">Part 3A</a>.)</big></li>
+        <li><big>Determine <i>p</i><sub>stable</sub>, the number of
+            stable imprinted patterns.&nbsp; An imprinted pattern is
+            considered unstable if any of its bits are unstable, that
+            is, if bit <i>i</i> is of opposite sign to its local field
+            <i>h<sub>i</sub></i>.&nbsp; Therefore, after imprinting the
+            first <i>p </i>patterns, test each imprinted pattern <i>k
+            </i>(<i>k </i>= 1, …, <i>p</i>) as follows: Initialize the
+            cells to pattern <i>k </i>and compute the local fields </big><big><i>h<sub>i</sub></i></big><big>
+            of each bit. Compare each bit with local field to test for
+            stability.&nbsp; Repeat for each of the <i>p </i>patterns.</big><big>&nbsp;
+
+
+
+
+
+
+
+            (The computation of the local field is described on slides
+            5–6 in <a href="https://web.eecs.utk.edu/~mclennan/Classes/420/handouts/Part-3A-6pp.pdf">Part 3A</a>.)</big></li>
+        <li><big>Compute the probability of an imprinted pattern being
+            stable, <i>P</i><sub>stable</sub> = <i>p</i><sub>stable</sub>
+            / <i>p</i>.&nbsp; (Note that <i>p, P</i><sub>stable</sub>,
+            and <i>p</i><sub>stable</sub> are different; this is
+            Bar-Yam’s notation, which I’ve retained for consistency with
+            his book.)</big></li>
+        <li><big>Repeat steps 2–4 for </big><big><i>p</i> = 1, ..., 50</big><big>
+            and keep track of </big><big><i>P</i><sub>stable</sub></big><big>
+            for each value of <i>p</i>.<br>
+          </big></li>
+        <li><big>Repeat the forgoing for several sets of 50 random
+            patterns and average over them.<br>
+          </big></li>
+      </ol>
+    </blockquote>
+    <ul>
+      <li><big>As a result of your simulations, you should generate two
+          graphs:&nbsp; First, a plot of the fraction of unstable
+          imprints as a function of the number of imprints (<i>p</i> =
+          1, ..., 50).&nbsp; Second, a plot of the number of stable
+          imprints as a function of the number of imprints (same range).</big><br>
+      </li>
+      <li><font size="+1">For examples, see Bar-Yam Section 2.2.6 (pages
+          312–14); your program should be able to generate graphs
+          comparable to Figs. 2.2.5 and 2.2.6 on p. 315 (but it is not
+          necessary to normalize to <i>p</i>).</font></li>
+      <li> <font size="+1">You should hand in (1) your program, (2)
+          your graphs or other output, and (3) a discussion of your
+          results and their implications.</font></li>
+      <li><font size="+1">For <b>extra credit</b>, do some or all of
+          the activities described below <b>For Graduate and Honors
+            Credit</b>.<br>
+        </font></li>
+    </ul>
+    <h2> For COSC 427 and 527 Credit</h2>
+    <ul>
+      <li> <font size="+1">You should do everything expected <b>For
+            COSC 420 Credit </b>(above).</font></li>
+      <li> <font size="+1">In addition, you should investigate the size
+          of the basins of attraction as a function of the number of
+          imprinted patterns (Bar-Yam, Section 2.2.6, pp. 314–16).&nbsp;
+          In other words, you should generate graphs similar to Fig.
+          2.2.7 (p. 315).&nbsp; Here is the procedure:<a href="https://web.eecs.utk.edu/~mclennan/Classes/420/handouts/Project3.html#note1"><sup><font color="#cc0000">&lt;note&gt;</font></sup></a><br>
+          <br>
+        </font>
+        <ol>
+          <li>Generate 50 random patterns.</li>
+          <li>For <i>p</i> = 1, …, 50, imprint the first <i>p </i>test
+
+
+
+
+
+
+
+            patterns, as for your stability tests.</li>
+          <li>For each of the <i>p </i>imprinted patterns, estimate
+            the size of its basin of attraction, as follows.</li>
+          <li>If the pattern is unstable, then the size of its basin is
+            0.</li>
+          <li>Otherwise, you will estimate how many bits you can change
+            in the imprinted pattern and still have it converge to the
+            correct stable state in a certain fixed number of steps (<i>n</i>
+            = 10).</li>
+          <li>More specifically, to estimate the size of the basin of
+            imprinted pattern <i>k</i> (<i>k</i> = 1, …, <i>p</i>),
+            generate a random permutation of the numbers 1, …, 100; let
+            <i>L<sub>i</sub></i> be the <i>i</i>-th number in this
+            permutation.&nbsp; This list gives you the order in which
+            you will change the bits of pattern <i>k</i>.&nbsp; You
+            will change at most 50 bits, since that is the maximum size
+            of a basin (Why?).&nbsp; Therefore, all you need is <i>L</i><sub>1</sub>
+            to <i>L</i><sub>50</sub>.</li>
+          <li>For the <i>i</i>-th iteration, you will flip bits <i>L</i><sub>1</sub>
+            ,<i> L</i><sub>2</sub>, …, <i>L<sub>i</sub></i> of pattern
+            <i>k</i>, initialize the net to the resulting modified
+            pattern, and then see if the net converges to pattern <i>k</i>
+            within 10 cycles (that is, 10 updates of all the cells).</li>
+          <li>Estimate the size of the basin to be the minimum <i>i</i>
+            for which the modified pattern doesn’t converge to pattern <i>k</i>.</li>
+          <li>Repeat steps 5–7 for several different random permutations
+            of 1, …, 100, where<i> L<sub>i</sub></i> is the <i>i</i>-th
+            number in this permutation.&nbsp; Average the results to
+            estimate the basin size for pattern <i>k</i>.<br>
+          </li>
+          <li>Repeat steps 3–8 for each imprinted pattern <i>k</i>.&nbsp;
+
+
+
+
+
+
+
+            Compute a <i>basin histogram</i>, which counts the number
+            of imprinted patterns with each different basin size 0, 1,
+            …, 50.<br>
+          </li>
+          <li>Repeat steps 3–9 for <i>p</i> = 1, …, 50.&nbsp; Plot the
+            basin histogram for each value of <i>p</i>.&nbsp; (You can
+            put them all on one graph, as in Bar-Yam Fig. 2.2.7, if you
+            like.)<br>
+            <big><br>
+            </big></li>
+        </ol>
+      </li>
+      <li><big>Hand in your programs, graphs, and a discussion of your
+          results.</big><br>
+      </li>
+      <li><font size="+1">For <b>extra credit</b>, you can investigate
+          the effect of noise (pseudo-temperature) on retrieval of
+          imprinted patterns (Bar-Yam, Question 2.2.2, pp.
+          316–19).&nbsp; In other words, you should generate graphs
+          comparable to Fig. 2.2.8 (p. 318).&nbsp; Use the stochastic
+          update rule we discussed in class (recall &#946; = 1/<i>T</i>):<br>
+        </font>
+        <blockquote>Pr{<i>s<sub>i</sub></i>' = +1} = &#963;(<i>h<sub>i</sub></i>),<br>
+          Pr{<i>s<sub>i</sub></i>' = –1} = 1 – &#963;(<i>h<sub>i</sub></i>),<br>
+          where &#963;(<i>h</i>) = 1 / [1 + exp(–2<i>h</i> / <i>T</i>)].<br>
+        </blockquote>
+      </li>
+      <li><font size="+1"><small><font color="#cc0000"><a name="note1"></a>&lt;note&gt;</font>
+            The procedure for&nbsp; computing the distribution of basin
+            sizes is given on pp. 314–15 of Bar-Yam, but I don’t&nbsp;
+            recommend that you look at it, because the notation is not
+            very good.&nbsp; However, if you do look at it, please note
+            that there is an error in the first line of Eq.&nbsp;
+            2.2.39.&nbsp; The&nbsp; <i>i </i>subscript (on &#958;<sup>&#956;</sup><sub><i>i</i></sub>
+            or <i>xi^mu_i</i>) should be&nbsp; <i>j </i>(that is, </small></font><font size="+1"><small>&#958;<sup>&#956;</sup><sub><i>j</i></sub></small></font><font size="+1"><small> or <i>xi^mu_j</i>). </small><br>
+        </font></li>
+    </ul>
+    <p><small><br>
+        <font size="+2"><small>If you have any other questions, please
+            email me &lt;<a href="mailto:maclennan@utk.edu?subject=Project%203">maclennan@utk.edu</a>&gt;.</small></font></small>
+    </p>
+    <br>
+    <hr>&nbsp;<a href="https://web.eecs.utk.edu/~mclennan/Classes/420/index.html"><img alt="" src="./Project3_Description_files/icon.jpg" height="50" align="middle" width="50"> </a><a href="https://web.eecs.utk.edu/~mclennan/Classes/420/index.html"> </a><a href="https://web.eecs.utk.edu/~mclennan/Classes/420/index.html">Return to CS 420/427/527 home page</a><br>
+    <br>
+    <a href="http://www.cs.utk.edu/~mclennan/"><img src="./Project3_Description_files/BJM-icon.gif" alt="" align="middle">
+      Return to MacLennan’s home page</a><br>
+    <br>
+    <address> <a href="mailto:maclennan@utk.edu?subject=Project%203"> <img src="./Project3_Description_files/button.letter.gif" alt="" align="middle"> Send mail</a> to Bruce MacLennan / <tt>MacLennan@utk.edu
+
+
+
+        <br>
+        <br>
+      </tt> <a href="http://validator.w3.org/check/referer"> <img src="./Project3_Description_files/valid-html401.png" alt="Valid HTML
+          4.01!" height="31" align="right" border="0" width="88"></a>
+      This page is <u>web.eecs.utk.edu/~mclennan/Classes/420/handouts/Project-3.html</u><br>
+      Last updated: 2016-02-26. </address>
+  
+
+<link rel="stylesheet" type="text/css" media="screen" href="chrome-extension://fcdjadjbdihbaodagojiomdljhjhjfho/css/atd.css"><span id="buffer-extension-hover-button" style="display: none;position: absolute;z-index: 8675309;width: 100px;height: 25px;background-image: url(chrome-extension://noojglkidnpfjbincgijbaiedldjfbhh/data/shared/img/buffer-hover-icon@1x.png);background-size: 100px 25px;opacity: 0.9;cursor: pointer;"></span></body></html>
