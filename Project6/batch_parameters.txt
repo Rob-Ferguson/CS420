@@ -1,0 +1,8 @@
+/The parameter sets defined below will be used to run batch simulations.
+/Every combination of the parameters will be enumerated.
+
+PARTICLECOUNT 10 20 30 40 50 100
+INERTIA 0.1 0.25 0.5 0.75 0.9 
+COGNITION 0.5 1.0 1.75 2.0 3.0 4.0
+SOCIAL 0.5 1.0 1.75 2.0 3.0 4.0
+MAXVELOCITY 1.0 2.0 3.0 5.0 7.0 10.0

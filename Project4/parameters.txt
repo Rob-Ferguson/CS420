@@ -1,0 +1,117 @@
+//Problem 1
+
+//*VaryNumNeurons
+//3 1 0.3 25000 problem1_data/training1.txt problem1_data/validation1.txt problem1_data/testing1.txt
+
+//*VaryHiddenLayers
+//2 7 0.3 25000 problem1_data/training1.txt problem1_data/validation1.txt problem1_data/testing1.txt
+
+//*VaryLearningRate
+//2 3 0.2 25000 problem1_data/training1.txt problem1_data/validation1.txt problem1_data/testing1.txt
+
+Problem 2
+
+/Using 50000 epochs, not 30000
+*Optimal1_VaryLearnRate
+-v e 2
+2 5 0.1 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.15 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.2 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.25 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.3 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.35 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+2 5 0.4 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+*Optimal2_VaryLearnRate
+3 5 0.1 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.15 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.2 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.25 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.3 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.35 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+3 5 0.4 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+*Optimal3_VaryLearnRate
+-v e 2
+3 5 0.1 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.15 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.2 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.25 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.3 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.35 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+-v e 2
+3 5 0.4 50000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+
+/*General_ParameterTesting
+/1 10 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 10 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 7 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/-v e 
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/-v o 
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/-v e 
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/-v o 
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+
+/*OneNeuron_VaryingHiddenLayers
+/1 1 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 1 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 1 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/4 1 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/5 1 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/*TwoNeuron_VaryingHiddenLayers
+/1 2 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 2 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 2 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/4 2 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/5 2 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/*ThreeNeuron_VaryingHiddenLayers
+/1 3 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 3 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 3 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/4 3 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/5 3 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/*FourNeuron_VaryingHiddenLayers
+/1 4 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 4 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 4 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/4 4 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/5 4 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
+/*FiveNeuron_VaryingHiddenLayers
+/1 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/2 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/3 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/4 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+/5 5 0.2 30000 problem2_data/training2.txt problem2_data/validation2.txt problem2_data/testing2.txt
+
